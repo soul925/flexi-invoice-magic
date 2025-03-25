@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import Layout from '@/components/Layout';
-import FileUpload from '@/components/invoice/FileUpload';
+import FileUpload from '@/components/invoice/file-upload';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import DataReviewForm, { InvoiceData } from '@/components/invoice/DataReviewForm';
 import InvoiceResults from '@/components/invoice/InvoiceResults';
