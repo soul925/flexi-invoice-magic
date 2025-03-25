@@ -12,48 +12,71 @@ export interface OCRResult {
   error?: string;
 }
 
-// Mock data for demonstration
-const mockExtractedData: InvoiceData = {
-  invoiceNumber: 'INV-2023-0158',
-  invoiceDate: '2023-10-15',
-  dueDate: '2023-11-15',
-  vendor: {
-    name: 'Acme Corporation',
-    address: '123 Business St, Suite 100, San Francisco, CA 94107',
-    phone: '(555) 123-4567',
-    email: 'billing@acmecorp.com',
-  },
-  customer: {
-    name: 'TechStart Inc.',
-    address: '456 Innovation Ave, Mountain View, CA 94043',
-    phone: '(555) 987-6543',
-    email: 'accounts@techstart.io',
-  },
-  items: [
-    {
-      description: 'Product A - Premium Subscription',
-      quantity: 2,
-      unitPrice: 600,
-      amount: 1200,
+// Function to generate dynamic invoice data based on the file
+const generateDynamicInvoiceData = (file: File): InvoiceData => {
+  // In a real application, this would be replaced with actual OCR extraction
+  // For demonstration, we're creating unique data based on the file name and timestamp
+  const timestamp = new Date().getTime();
+  const fileNameHash = file.name.split('.')[0].slice(0, 4).toUpperCase();
+  
+  return {
+    invoiceNumber: `INV-${fileNameHash}-${timestamp.toString().slice(-4)}`,
+    invoiceDate: new Date().toISOString().split('T')[0],
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    vendor: {
+      name: `Vendor ${fileNameHash}`,
+      address: '123 Business St, Suite 100, San Francisco, CA 94107',
+      phone: '(555) 123-4567',
+      email: `billing@${fileNameHash.toLowerCase()}.com`,
     },
-    {
-      description: 'Product B - Hardware',
-      quantity: 1,
-      unitPrice: 850,
-      amount: 850,
+    customer: {
+      name: 'TechStart Inc.',
+      address: '456 Innovation Ave, Mountain View, CA 94043',
+      phone: '(555) 987-6543',
+      email: 'accounts@techstart.io',
     },
-    {
-      description: 'Consulting Services',
-      quantity: 10,
-      unitPrice: 200,
-      amount: 2000,
-    },
-  ],
-  subtotal: 4050,
-  tax: 303.75,
-  total: 4353.75,
-  notes: 'Payment due within 30 days. Late payments subject to 1.5% fee.',
-  paymentTerms: 'Net 30',
+    items: [
+      {
+        description: `Product X - ${file.name.split('.')[0]}`,
+        quantity: Math.floor(Math.random() * 5) + 1,
+        unitPrice: Math.floor(Math.random() * 500) + 100,
+        amount: 0, // Will be calculated
+      },
+      {
+        description: 'Hardware Component',
+        quantity: Math.floor(Math.random() * 3) + 1,
+        unitPrice: Math.floor(Math.random() * 200) + 50,
+        amount: 0, // Will be calculated
+      },
+    ],
+    subtotal: 0, // Will be calculated
+    tax: 0, // Will be calculated
+    total: 0, // Will be calculated
+    notes: `Invoice generated from file: ${file.name}`,
+    paymentTerms: 'Net 30',
+  };
+};
+
+// Calculate the financial values for an invoice
+const calculateInvoiceAmounts = (invoice: InvoiceData): InvoiceData => {
+  const result = { ...invoice };
+  
+  // Calculate amount for each line item
+  result.items = result.items.map(item => ({
+    ...item,
+    amount: item.quantity * item.unitPrice
+  }));
+  
+  // Calculate subtotal
+  result.subtotal = result.items.reduce((sum, item) => sum + item.amount, 0);
+  
+  // Calculate tax (7.5%)
+  result.tax = parseFloat((result.subtotal * 0.075).toFixed(2));
+  
+  // Calculate total
+  result.total = result.subtotal + result.tax;
+  
+  return result;
 };
 
 /**
@@ -65,16 +88,15 @@ export const processInvoiceImage = async (file: File): Promise<OCRResult> => {
   await new Promise(resolve => setTimeout(resolve, 2000));
   
   try {
-    // In a real application, we would:
-    // 1. Preprocess the image if needed (handled by preprocessImage in a real app)
-    // 2. Send the image to an OCR service
-    // 3. Parse the OCR results
-    // 4. Extract the relevant invoice information
+    // Generate dynamic data based on the uploaded file
+    let invoiceData = generateDynamicInvoiceData(file);
     
-    // For demonstration, we'll return mock data
+    // Calculate the financial amounts
+    invoiceData = calculateInvoiceAmounts(invoiceData);
+    
     return {
       success: true,
-      data: mockExtractedData
+      data: invoiceData
     };
   } catch (error) {
     console.error("OCR processing error:", error);

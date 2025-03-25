@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,54 +79,28 @@ const emptyInvoiceData: InvoiceData = {
   paymentTerms: '',
 };
 
-// Mock data for demonstration purposes
-const mockExtractedData: InvoiceData = {
-  invoiceNumber: 'INV-2023-0158',
-  invoiceDate: '2023-10-15',
-  dueDate: '2023-11-15',
-  vendor: {
-    name: 'Acme Corporation',
-    address: '123 Business St, Suite 100, San Francisco, CA 94107',
-    phone: '(555) 123-4567',
-    email: 'billing@acmecorp.com',
-  },
-  customer: {
-    name: 'TechStart Inc.',
-    address: '456 Innovation Ave, Mountain View, CA 94043',
-    phone: '(555) 987-6543',
-    email: 'accounts@techstart.io',
-  },
-  items: [
-    {
-      description: 'Product A - Premium Subscription',
-      quantity: 2,
-      unitPrice: 600,
-      amount: 1200,
-    },
-    {
-      description: 'Product B - Hardware',
-      quantity: 1,
-      unitPrice: 850,
-      amount: 850,
-    },
-    {
-      description: 'Consulting Services',
-      quantity: 10,
-      unitPrice: 200,
-      amount: 2000,
-    },
-  ],
-  subtotal: 4050,
-  tax: 303.75,
-  total: 4353.75,
-  notes: 'Payment due within 30 days. Late payments subject to 1.5% fee.',
-  paymentTerms: 'Net 30',
-};
-
 const DataReviewForm = ({ initialData, onSubmit, onBack }: DataReviewFormProps) => {
-  // In a real application, initialData would come from OCR processing
-  // For this demo, we'll use mock data
-  const [formData, setFormData] = useState<InvoiceData>(mockExtractedData);
+  // Use initialData if provided, otherwise use empty invoice data
+  const [formData, setFormData] = useState<InvoiceData>(() => {
+    if (initialData) {
+      // Ensure all required fields are present
+      return {
+        ...emptyInvoiceData,
+        ...initialData,
+        vendor: {
+          ...emptyInvoiceData.vendor,
+          ...(initialData.vendor || {})
+        },
+        customer: {
+          ...emptyInvoiceData.customer,
+          ...(initialData.customer || {})
+        },
+        items: initialData.items || emptyInvoiceData.items
+      };
+    }
+    return emptyInvoiceData;
+  });
+  
   const [activeTab, setActiveTab] = useState('invoice');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 

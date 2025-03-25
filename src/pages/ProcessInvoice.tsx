@@ -24,6 +24,12 @@ const ProcessInvoice = () => {
   const [finalData, setFinalData] = useState<InvoiceData | null>(null);
   
   const handleFileSelect = async (file: File) => {
+    // Clear previous data when a new file is uploaded
+    setSelectedFile(null);
+    setExtractedData(null);
+    setFinalData(null);
+    
+    // Set the new file
     setSelectedFile(file);
     setIsProcessing(true);
     
