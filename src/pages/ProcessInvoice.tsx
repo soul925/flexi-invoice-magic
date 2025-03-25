@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import FileUpload from '@/components/invoice/file-upload';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import DataReviewForm, { InvoiceData } from '@/components/invoice/DataReviewForm';
-import InvoiceResults from '@/components/invoice/InvoiceResults';
+import InvoiceResults from '@/components/invoice/results';
 import { processInvoiceImage } from '@/utils/ocr';
 import { processImageForOCR } from '@/utils/imageProcessing';
 import { toast } from 'sonner';
