@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -6,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Download, Clipboard, CheckCircle, QrCode } from 'lucide-react';
 import { toast } from 'sonner';
 import { InvoiceData } from './DataReviewForm';
+import { generateInvoicePDF, generateInvoiceQRCode } from '@/utils/pdfGenerator';
 
 interface InvoiceResultsProps {
   data: InvoiceData;
@@ -14,11 +14,21 @@ interface InvoiceResultsProps {
 
 const InvoiceResults = ({ data, onReset }: InvoiceResultsProps) => {
   const [activeTab, setActiveTab] = useState('preview');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   
-  const generateQRCode = () => {
-    // In a real app, this would generate an actual QR code
-    // For demo purposes, we're just showing a mock QR
-    return '/placeholder.svg';
+  const handleTabChange = async (value: string) => {
+    setActiveTab(value);
+    
+    if (value === 'qr' && !qrCodeUrl) {
+      try {
+        const url = await generateInvoiceQRCode(data.invoiceNumber);
+        setQrCodeUrl(url);
+      } catch (error) {
+        console.error("Error generating QR code:", error);
+        toast.error("Failed to generate QR code");
+      }
+    }
   };
   
   const formatCurrency = (amount: number) => {
@@ -39,13 +49,33 @@ const InvoiceResults = ({ data, onReset }: InvoiceResultsProps) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
     
     toast.success('JSON file downloaded successfully');
   };
   
-  const handleDownloadPDF = () => {
-    // In a real app, this would generate an actual PDF
-    toast.success('PDF file downloaded successfully');
+  const handleDownloadPDF = async () => {
+    try {
+      setIsDownloading(true);
+      
+      const pdfBlob = await generateInvoicePDF(data);
+      
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice_${data.invoiceNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('PDF file downloaded successfully');
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error('Failed to generate PDF. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
   };
   
   const handleCopyJSON = () => {
@@ -69,7 +99,7 @@ const InvoiceResults = ({ data, onReset }: InvoiceResultsProps) => {
         </div>
       </div>
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
         <div className="px-6 pt-4">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="preview">
@@ -194,7 +224,7 @@ const InvoiceResults = ({ data, onReset }: InvoiceResultsProps) => {
             <div className="flex flex-col items-center justify-center p-8">
               <div className="w-48 h-48 bg-white p-2 rounded-lg shadow-sm mb-4">
                 <img 
-                  src={generateQRCode()} 
+                  src={qrCodeUrl || '/placeholder.svg'} 
                   alt="Invoice QR Code" 
                   className="w-full h-full object-contain" 
                 />
@@ -230,10 +260,11 @@ const InvoiceResults = ({ data, onReset }: InvoiceResultsProps) => {
           
           <Button
             onClick={handleDownloadPDF}
+            disabled={isDownloading}
             className="gap-2 rounded-lg focus-ring"
           >
             <Download className="h-4 w-4" />
-            PDF
+            {isDownloading ? 'Generating...' : 'PDF'}
           </Button>
         </div>
       </div>
